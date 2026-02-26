@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50:  #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  
+  --color-surface-light: #f8fafc;
+  --color-surface-dark: #0f172a;
+  --color-surface-card-dark: #1e293b;
+}
+
+@layer base {
+  body {
+    @apply bg-surface-light text-slate-900 antialiased;
+  }
+}

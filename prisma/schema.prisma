@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  domain    String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  users     User[]
+  contacts  Contact[]
+  meetings  Meeting[]
+  auditLogs AuditLog[]
+}
+
+model User {
+  id                String       @id @default(uuid())
+  tenantId          String
+  firebaseUid       String?      @unique
+  email             String
+  name              String?
+  avatarUrl         String?
+  personalEmail     String?
+  professionalEmail String?
+  phone             String?      // WhatsApp
+  company           String?
+  role              UserRole     @default(ADMIN)
+  mfaEnabled        Boolean      @default(false)
+  mfaSecret         String?
+  
+  // Secretariat / Manager Hierarchy
+  managerId         String?
+  manager           User?        @relation("UserManager", fields: [managerId], references: [id])
+  subordinates      User[]       @relation("UserManager")
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+  
+  // Relationships
+  tenant            Tenant       @relation(fields: [tenantId], references: [id])
+  organizedMeetings Meeting[]    @relation("MeetingOrganizer")
+  attendances       Attendance[]
+  assignedTasks     Task[]       @relation("TaskAssignee")
+  auditLogs         AuditLog[]
+  contacts          Contact[]    @relation("UserContacts")
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+enum UserRole {
+  ADMIN
+  SUBORDINATE
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  tenantId  String
+  ownerId   String
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  jobTitle  String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  owner     User     @relation("UserContacts", fields: [ownerId], references: [id])
+  meetings  Meeting[] @relation("MeetingContacts")
+
+  @@index([tenantId])
+}
+
+model Meeting {
+  id          String       @id @default(uuid())
+  tenantId    String
+  title       String
+  description String?
+  type        MeetingType  @default(ONLINE)
+  location    String?      // If IN_PERSON
+  meetingLink String?      // If ONLINE
+  date        DateTime
+  startTime   DateTime?
+  endTime     DateTime?
+  agenda      String?      @db.Text
+  qrCodeUrl   String?
+  version     Int          @default(1) // Optimistic Locking
+  organizerId String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  // Relationships
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  organizer   User         @relation("MeetingOrganizer", fields: [organizerId], references: [id])
+  attendances Attendance[]
+  minute      Minute?
+  tasks       Task[]
+  attachments Attachment[]
+  contacts    Contact[]    @relation("MeetingContacts")
+
+  @@index([tenantId, date])
+}
+
+enum MeetingType {
+  ONLINE
+  IN_PERSON
+}
+
+model Attendance {
+  id        String   @id @default(uuid())
+  userId    String
+  meetingId String
+  joinedAt  DateTime @default(now())
+  
+  // Relationships
+  user      User     @relation(fields: [userId], references: [id])
+  meeting   Meeting  @relation(fields: [meetingId], references: [id])
+
+  @@unique([userId, meetingId])
+}
+
+model Minute {
+  id         String   @id @default(uuid())
+  meetingId  String   @unique
+  content    String?  @db.Text // Full IA Summary
+  transcript String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  // Relationships
+  meeting    Meeting  @relation(fields: [meetingId], references: [id])
+}
+
+model Task {
+  id             String     @id @default(uuid())
+  tenantId       String?    // Denormalized for optimized queries
+  meetingId      String
+  assigneeId     String?     // System user if chosen
+  description    String
+  assigneeEmail  String?     // Or external contact email
+  assigneePhone  String?     // Or external contact phone
+  dueDate        DateTime?
+  status         TaskStatus @default(PENDING)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  deletedAt      DateTime?
+
+  // Relationships
+  meeting        Meeting    @relation(fields: [meetingId], references: [id])
+  assignee       User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  @@index([tenantId, status, dueDate])
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  meetingId String
+  fileName  String
+  fileUrl   String   // Cloud Storage URL
+  fileType  String?
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+
+  // Relationships
+  meeting   Meeting  @relation(fields: [meetingId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  tenantId  String
+  userId    String
+  action    String   // e.g., "MEETING_CREATED", "MEETING_DELETED", "MEETING_RESCHEDULED"
+  entity    String   // e.g., "Meeting", "User", "Task"
+  entityId  String
+  details   String?  @db.Text // JSON representation of changes
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+}

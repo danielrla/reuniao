@@ -1,0 +1,1 @@
+{"version":3,"file":"CreateSubordinateUseCase.d.ts","sourceRoot":"","sources":["../../../../src/application/useCases/user/CreateSubordinateUseCase.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,oBAAoB,EAAE,MAAM,qBAAqB,CAAC;AAG3D,qBAAa,wBAAwB;IAC3B,OAAO,CAAC,QAAQ,EAAE,MAAM,EAAE,SAAS,EAAE,MAAM,EAAE,GAAG,EAAE,oBAAoB;;;;;;;;;;;;;;;;;;;CAyB/E"}
