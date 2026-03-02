@@ -9,6 +9,8 @@ const router = (0, express_1.Router)();
 // Protect all contact routes
 router.use(auth_middleware_1.requireAuth);
 router.get('/', contact_controller_1.getContacts);
+router.post('/import', contact_controller_1.importContacts);
+router.post('/sync-google', contact_controller_1.syncGoogleContacts);
 router.post('/', (0, validateRequest_1.validateRequest)(ContactDTOs_1.CreateContactDTOSchema), contact_controller_1.createContact);
 router.put('/:id', (0, validateRequest_1.validateRequest)(ContactDTOs_1.UpdateContactDTOSchema), contact_controller_1.updateContact);
 router.delete('/:id', contact_controller_1.deleteContact);

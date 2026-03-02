@@ -3,14 +3,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerAttendance = exports.getMeetings = exports.deleteMeeting = exports.updateMeeting = exports.createMeeting = void 0;
+exports.syncGoogleMeetings = exports.deleteAttachment = exports.addAttachment = exports.registerAttendance = exports.getMeetings = exports.deleteMeeting = exports.updateMeeting = exports.createMeeting = void 0;
 const prisma_1 = __importDefault(require("../config/prisma"));
 const CreateMeetingUseCase_1 = require("../application/useCases/meeting/CreateMeetingUseCase");
 const UpdateMeetingUseCase_1 = require("../application/useCases/meeting/UpdateMeetingUseCase");
 const DeleteMeetingUseCase_1 = require("../application/useCases/meeting/DeleteMeetingUseCase");
+const AddAttachmentUseCase_1 = require("../application/useCases/meeting/AddAttachmentUseCase");
+const DeleteAttachmentUseCase_1 = require("../application/useCases/meeting/DeleteAttachmentUseCase");
+const SyncGoogleMeetingsUseCase_1 = require("../application/useCases/meeting/SyncGoogleMeetingsUseCase");
 const createMeetingUseCase = new CreateMeetingUseCase_1.CreateMeetingUseCase();
 const updateMeetingUseCase = new UpdateMeetingUseCase_1.UpdateMeetingUseCase();
 const deleteMeetingUseCase = new DeleteMeetingUseCase_1.DeleteMeetingUseCase();
+const addAttachmentUseCase = new AddAttachmentUseCase_1.AddAttachmentUseCase();
+const deleteAttachmentUseCase = new DeleteAttachmentUseCase_1.DeleteAttachmentUseCase();
+const syncGoogleMeetingsUseCase = new SyncGoogleMeetingsUseCase_1.SyncGoogleMeetingsUseCase();
 const createMeeting = async (req, res, next) => {
     try {
         const meeting = await createMeetingUseCase.execute(req.user.tenantId, req.user.id, req.body);
@@ -45,18 +51,53 @@ const deleteMeeting = async (req, res, next) => {
 exports.deleteMeeting = deleteMeeting;
 const getMeetings = async (req, res, next) => {
     try {
-        // Implementação paginada básica com filtro de tenant e soft delete
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        const meetings = await prisma_1.default.meeting.findMany({
-            where: { tenantId: req.user.tenantId, deletedAt: null },
-            include: { organizer: { select: { id: true, name: true, avatarUrl: true } } },
-            orderBy: { date: 'desc' },
-            skip,
-            take: limit
+        const { startDate, endDate, type, status } = req.query;
+        const where = { tenantId: req.user.tenantId, deletedAt: null };
+        if (status)
+            where.status = status;
+        if (type)
+            where.type = type;
+        if (startDate || endDate) {
+            where.date = {};
+            if (startDate) {
+                const sDate = new Date(startDate);
+                sDate.setUTCHours(0, 0, 0, 0);
+                where.date.gte = sDate;
+            }
+            if (endDate) {
+                const eDate = new Date(endDate);
+                eDate.setUTCHours(23, 59, 59, 999);
+                where.date.lte = eDate;
+            }
+        }
+        const [meetings, total] = await Promise.all([
+            prisma_1.default.meeting.findMany({
+                where,
+                include: {
+                    organizer: { select: { id: true, name: true, avatarUrl: true } },
+                    contacts: true,
+                    attachments: true
+                },
+                orderBy: { date: 'asc' },
+                skip,
+                take: limit
+            }),
+            prisma_1.default.meeting.count({
+                where
+            })
+        ]);
+        res.status(200).json({
+            data: meetings,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
         });
-        res.status(200).json(meetings);
     }
     catch (error) {
         next(error);
@@ -86,4 +127,36 @@ const registerAttendance = async (req, res, next) => {
     }
 };
 exports.registerAttendance = registerAttendance;
+const addAttachment = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const attachment = await addAttachmentUseCase.execute(req.user.tenantId, req.user.id, req.user.managerId, String(id), req.body);
+        res.status(201).json(attachment);
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.addAttachment = addAttachment;
+const deleteAttachment = async (req, res, next) => {
+    try {
+        const { id, attachmentId } = req.params;
+        await deleteAttachmentUseCase.execute(req.user.tenantId, req.user.id, req.user.managerId, String(id), String(attachmentId));
+        res.status(200).json({ message: 'Attachment deleted successfully' });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.deleteAttachment = deleteAttachment;
+const syncGoogleMeetings = async (req, res, next) => {
+    try {
+        const result = await syncGoogleMeetingsUseCase.execute(req.user.tenantId, req.user.id);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.syncGoogleMeetings = syncGoogleMeetings;
 //# sourceMappingURL=meeting.controller.js.map

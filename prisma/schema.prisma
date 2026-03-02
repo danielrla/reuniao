@@ -36,6 +36,11 @@ model User {
   mfaEnabled        Boolean      @default(false)
   mfaSecret         String?
   
+  // Google Calendar Integration
+  googleClientId     String?
+  googleClientSecret String?
+  googleRefreshToken String?
+  
   // Secretariat / Manager Hierarchy
   managerId         String?
   manager           User?        @relation("UserManager", fields: [managerId], references: [id])
@@ -72,9 +77,10 @@ model Contact {
   company   String?
   jobTitle  String?
   avatarUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+  googleContactId String?
 
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   owner     User     @relation("UserContacts", fields: [ownerId], references: [id])
@@ -89,6 +95,8 @@ model Meeting {
   title       String
   description String?
   type        MeetingType  @default(ONLINE)
+  status      MeetingStatus @default(MARCADA)
+  cancellationReason String?    @db.Text
   location    String?      // If IN_PERSON
   meetingLink String?      // If ONLINE
   date        DateTime
@@ -96,6 +104,7 @@ model Meeting {
   endTime     DateTime?
   agenda      String?      @db.Text
   qrCodeUrl   String?
+  googleEventId String?    // Google Calendar Event ID
   version     Int          @default(1) // Optimistic Locking
   organizerId String
   createdAt   DateTime     @default(now())
@@ -117,6 +126,13 @@ model Meeting {
 enum MeetingType {
   ONLINE
   IN_PERSON
+}
+
+enum MeetingStatus {
+  MARCADA
+  CANCELADA
+  REAGENDADA
+  REALIZADA
 }
 
 model Attendance {
@@ -154,6 +170,8 @@ model Task {
   assigneeEmail  String?     // Or external contact email
   assigneePhone  String?     // Or external contact phone
   dueDate        DateTime?
+  completionDate DateTime?
+  notes          String?    @db.Text
   status         TaskStatus @default(PENDING)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt

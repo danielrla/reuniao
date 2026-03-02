@@ -101,7 +101,7 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="Reuniões Hoje" value={isLoading ? '-' : stats.meetingsToday} icon={CalendarIcon} />
-                <StatCard title="Pendências" value={isLoading ? '-' : stats.pendingTasks} icon={CheckSquareIcon} />
+                <StatCard title="Encaminhamentos" value={isLoading ? '-' : stats.pendingTasks} icon={CheckSquareIcon} />
                 <StatCard title="Atrasadas" value={isLoading ? '-' : stats.overdueTasks} icon={AlertCircle} trend="Ação requirida" />
                 <StatCard title="Total de Contatos" value={isLoading ? '-' : stats.totalContacts} icon={Users} />
             </div>
@@ -154,10 +154,10 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Pendências Críticas */}
+                {/* Encaminhamentos Críticos */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100">
-                        <h2 className="text-base font-semibold text-slate-900">Pendências Críticas</h2>
+                        <h2 className="text-base font-semibold text-slate-900">Encaminhamentos Críticos</h2>
                     </div>
                     <div className="p-6">
                         <div className="space-y-4">

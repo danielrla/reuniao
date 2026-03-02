@@ -4,4 +4,7 @@ export declare const updateMeeting: (req: Request, res: Response, next: NextFunc
 export declare const deleteMeeting: (req: Request, res: Response, next: NextFunction) => Promise<any>;
 export declare const getMeetings: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 export declare const registerAttendance: (req: Request, res: Response, next: NextFunction) => Promise<any>;
+export declare const addAttachment: (req: Request, res: Response, next: NextFunction) => Promise<any>;
+export declare const deleteAttachment: (req: Request, res: Response, next: NextFunction) => Promise<any>;
+export declare const syncGoogleMeetings: (req: Request, res: Response, next: NextFunction) => Promise<any>;
 //# sourceMappingURL=meeting.controller.d.ts.map

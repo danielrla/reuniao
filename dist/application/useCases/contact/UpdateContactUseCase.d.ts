@@ -11,8 +11,9 @@ export declare class UpdateContactUseCase {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        jobTitle: string | null;
         ownerId: string;
+        jobTitle: string | null;
+        googleContactId: string | null;
     }>;
 }
 //# sourceMappingURL=UpdateContactUseCase.d.ts.map

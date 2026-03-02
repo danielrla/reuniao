@@ -12,8 +12,8 @@ const validateRequest = (schema) => async (req, res, next) => {
             return res.status(400).json({
                 code: 'VALIDATION_FAILED',
                 message: 'Parâmetros inválidos enviados.',
-                details: error.errors.map((e) => ({
-                    field: e.path.join('.'),
+                details: (error.issues || error.errors || []).map((e) => ({
+                    field: e.path ? e.path.join('.') : 'unknown',
                     issue: e.message,
                 })),
                 timestamp: new Date().toISOString()

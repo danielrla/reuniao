@@ -7,6 +7,9 @@ export declare const UpdateProfileDTOSchema: z.ZodObject<{
     phone: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
     company: z.ZodOptional<z.ZodString>;
     mfaEnabled: z.ZodOptional<z.ZodBoolean>;
+    googleClientId: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
+    googleClientSecret: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
+    googleRefreshToken: z.ZodUnion<[z.ZodOptional<z.ZodString>, z.ZodLiteral<"">]>;
 }, z.core.$strip>;
 export declare const CreateSubordinateDTOSchema: z.ZodObject<{
     email: z.ZodString;

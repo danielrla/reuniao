@@ -10,7 +10,10 @@ exports.UpdateProfileDTOSchema = zod_1.z.object({
     // Validando E.164 padronizado internacional
     phone: zod_1.z.string().regex(/^\+[1-9]\d{1,14}$/, "Telefone inválido. Utilize o formato internacional (ex: +5511999999999)").optional().or(zod_1.z.literal('')),
     company: zod_1.z.string().optional(),
-    mfaEnabled: zod_1.z.boolean().optional()
+    mfaEnabled: zod_1.z.boolean().optional(),
+    googleClientId: zod_1.z.string().optional().or(zod_1.z.literal('')),
+    googleClientSecret: zod_1.z.string().optional().or(zod_1.z.literal('')),
+    googleRefreshToken: zod_1.z.string().optional().or(zod_1.z.literal(''))
 });
 exports.CreateSubordinateDTOSchema = zod_1.z.object({
     email: zod_1.z.string().email("Email inválido"),

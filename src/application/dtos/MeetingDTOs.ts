@@ -10,7 +10,9 @@ export const BaseMeetingSchema = z.object({
     location: z.string().optional(),
     meetingLink: z.string().url("Link inválido").optional(),
     agenda: z.string().optional(),
-    contactIds: z.array(z.string()).optional()
+    contactIds: z.array(z.string()).optional(),
+    status: z.enum(['MARCADA', 'CANCELADA', 'REAGENDADA', 'REALIZADA']).optional(),
+    cancellationReason: z.string().optional()
 });
 
 export const CreateMeetingDTOSchema = BaseMeetingSchema
@@ -27,7 +29,13 @@ export const CreateMeetingDTOSchema = BaseMeetingSchema
             return new Date(data.endTime) > new Date(data.startTime);
         }
         return true;
-    }, { message: "O horário de término deve ser posterior ao horário de início.", path: ["endTime"] });
+    }, { message: "O horário de término deve ser posterior ao horário de início.", path: ["endTime"] })
+    .refine((data) => {
+        if (data.status === 'CANCELADA' && (!data.cancellationReason || data.cancellationReason.trim().length === 0)) {
+            return false;
+        }
+        return true;
+    }, { message: "O motivo do cancelamento é obrigatório quando a reunião for cancelada.", path: ["cancellationReason"] });
 
 export const UpdateMeetingDTOSchema = BaseMeetingSchema.partial()
     .refine((data) => {
@@ -43,7 +51,13 @@ export const UpdateMeetingDTOSchema = BaseMeetingSchema.partial()
             return new Date(data.endTime) > new Date(data.startTime);
         }
         return true;
-    }, { message: "O horário de término deve ser posterior ao horário de início.", path: ["endTime"] });
+    }, { message: "O horário de término deve ser posterior ao horário de início.", path: ["endTime"] })
+    .refine((data) => {
+        if (data.status === 'CANCELADA' && (!data.cancellationReason || data.cancellationReason.trim().length === 0)) {
+            return false;
+        }
+        return true;
+    }, { message: "O motivo do cancelamento é obrigatório quando a reunião for cancelada.", path: ["cancellationReason"] });
 
 export type CreateMeetingDTO = z.infer<typeof CreateMeetingDTOSchema>;
 export type UpdateMeetingDTO = z.infer<typeof UpdateMeetingDTOSchema>;

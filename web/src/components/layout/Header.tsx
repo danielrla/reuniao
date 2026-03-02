@@ -1,8 +1,10 @@
-import { Search, Bell, Plus } from 'lucide-react';
+import { Search, Bell, Plus, User as UserIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Header = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     return (
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10">
@@ -33,8 +35,14 @@ const Header = () => {
                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
                 </button>
 
-                <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center cursor-pointer">
-                    <span className="text-indigo-700 font-semibold text-sm">D</span>
+                <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center cursor-pointer overflow-hidden" title={user?.email || 'Perfil'}>
+                    {user?.photoURL ? (
+                        <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                        <span className="text-indigo-700 font-semibold text-sm uppercase">
+                            {user?.displayName ? user.displayName.charAt(0) : (user?.email ? user.email.charAt(0) : <UserIcon className="w-4 h-4" />)}
+                        </span>
+                    )}
                 </div>
             </div>
         </header>

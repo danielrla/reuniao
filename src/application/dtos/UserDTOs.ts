@@ -8,7 +8,10 @@ export const UpdateProfileDTOSchema = z.object({
     // Validando E.164 padronizado internacional
     phone: z.string().regex(/^\+[1-9]\d{1,14}$/, "Telefone inválido. Utilize o formato internacional (ex: +5511999999999)").optional().or(z.literal('')),
     company: z.string().optional(),
-    mfaEnabled: z.boolean().optional()
+    mfaEnabled: z.boolean().optional(),
+    googleClientId: z.string().optional().or(z.literal('')),
+    googleClientSecret: z.string().optional().or(z.literal('')),
+    googleRefreshToken: z.string().optional().or(z.literal(''))
 });
 
 export const CreateSubordinateDTOSchema = z.object({

@@ -7,11 +7,13 @@ export declare class UpdateTaskStatusUseCase {
         updatedAt: Date;
         deletedAt: Date | null;
         description: string;
-        meetingId: string;
         status: import(".prisma/client").$Enums.TaskStatus;
+        meetingId: string;
         assigneeId: string | null;
         assigneeEmail: string | null;
         assigneePhone: string | null;
+        notes: string | null;
+        completionDate: Date | null;
         dueDate: Date | null;
     }>;
 }

@@ -21,7 +21,9 @@ class UpdateTaskStatusUseCase {
                 status: dto.status,
                 assigneeId: dto.assigneeId,
                 assigneeEmail: dto.assigneeEmail,
-                assigneePhone: dto.assigneePhone
+                assigneePhone: dto.assigneePhone,
+                notes: dto.notes,
+                completionDate: dto.completionDate ? new Date(dto.completionDate) : null
             }
         });
         // Auditoria implícita

@@ -14,6 +14,9 @@ export declare class CreateSubordinateUseCase {
         role: import(".prisma/client").$Enums.UserRole;
         mfaEnabled: boolean;
         mfaSecret: string | null;
+        googleClientId: string | null;
+        googleClientSecret: string | null;
+        googleRefreshToken: string | null;
         managerId: string | null;
         createdAt: Date;
         updatedAt: Date;

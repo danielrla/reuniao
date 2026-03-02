@@ -3,10 +3,16 @@ import prisma from '../config/prisma';
 import { CreateMeetingUseCase } from '../application/useCases/meeting/CreateMeetingUseCase';
 import { UpdateMeetingUseCase } from '../application/useCases/meeting/UpdateMeetingUseCase';
 import { DeleteMeetingUseCase } from '../application/useCases/meeting/DeleteMeetingUseCase';
+import { AddAttachmentUseCase } from '../application/useCases/meeting/AddAttachmentUseCase';
+import { DeleteAttachmentUseCase } from '../application/useCases/meeting/DeleteAttachmentUseCase';
+import { SyncGoogleMeetingsUseCase } from '../application/useCases/meeting/SyncGoogleMeetingsUseCase';
 
 const createMeetingUseCase = new CreateMeetingUseCase();
 const updateMeetingUseCase = new UpdateMeetingUseCase();
 const deleteMeetingUseCase = new DeleteMeetingUseCase();
+const addAttachmentUseCase = new AddAttachmentUseCase();
+const deleteAttachmentUseCase = new DeleteAttachmentUseCase();
+const syncGoogleMeetingsUseCase = new SyncGoogleMeetingsUseCase();
 
 export const createMeeting = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
@@ -39,24 +45,45 @@ export const deleteMeeting = async (req: Request, res: Response, next: NextFunct
 
 export const getMeetings = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Implementação paginada básica com filtro de tenant e soft delete
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         const skip = (page - 1) * limit;
 
+        const { startDate, endDate, type, status } = req.query;
+
+        const where: any = { tenantId: req.user.tenantId, deletedAt: null };
+
+        if (status) where.status = status as string;
+        if (type) where.type = type as 'ONLINE' | 'IN_PERSON';
+
+        if (startDate || endDate) {
+            where.date = {};
+            if (startDate) {
+                const sDate = new Date(startDate as string);
+                sDate.setUTCHours(0, 0, 0, 0);
+                where.date.gte = sDate;
+            }
+            if (endDate) {
+                const eDate = new Date(endDate as string);
+                eDate.setUTCHours(23, 59, 59, 999);
+                where.date.lte = eDate;
+            }
+        }
+
         const [meetings, total] = await Promise.all([
             prisma.meeting.findMany({
-                where: { tenantId: req.user.tenantId, deletedAt: null },
+                where,
                 include: {
                     organizer: { select: { id: true, name: true, avatarUrl: true } },
-                    contacts: true
+                    contacts: true,
+                    attachments: true
                 },
-                orderBy: { date: 'desc' },
+                orderBy: { date: 'asc' },
                 skip,
                 take: limit
             }),
             prisma.meeting.count({
-                where: { tenantId: req.user.tenantId, deletedAt: null }
+                where
             })
         ]);
 
@@ -97,6 +124,35 @@ export const registerAttendance = async (req: Request, res: Response, next: Next
         });
 
         res.status(201).json({ message: 'Attendance registered', attendance });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const addAttachment = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    try {
+        const { id } = req.params;
+        const attachment = await addAttachmentUseCase.execute(req.user.tenantId, req.user.id, req.user.managerId, String(id), req.body);
+        res.status(201).json(attachment);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteAttachment = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    try {
+        const { id, attachmentId } = req.params;
+        await deleteAttachmentUseCase.execute(req.user.tenantId, req.user.id, req.user.managerId, String(id), String(attachmentId));
+        res.status(200).json({ message: 'Attachment deleted successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const syncGoogleMeetings = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    try {
+        const result = await syncGoogleMeetingsUseCase.execute(req.user.tenantId, req.user.id);
+        res.status(200).json(result);
     } catch (error) {
         next(error);
     }

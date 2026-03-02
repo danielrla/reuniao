@@ -15,8 +15,11 @@ export declare class CreateMeetingUseCase {
         location: string | null;
         meetingLink: string | null;
         agenda: string | null;
-        qrCodeUrl: string | null;
+        status: import(".prisma/client").$Enums.MeetingStatus;
+        cancellationReason: string | null;
         version: number;
+        qrCodeUrl: string | null;
+        googleEventId: string | null;
         organizerId: string;
     }>;
 }

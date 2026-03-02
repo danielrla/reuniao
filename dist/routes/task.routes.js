@@ -9,6 +9,7 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.requireAuth);
 // Used for global unified dashboard of tasks with query filters (4.8)
 router.get('/', task_controller_1.getTasks);
+router.post('/', (0, validateRequest_1.validateRequest)(TaskDTOs_1.CreateTaskDTOSchema), task_controller_1.createTask);
 router.put('/:id', (0, validateRequest_1.validateRequest)(TaskDTOs_1.UpdateTaskStatusDTOSchema), task_controller_1.updateTaskStatus);
 router.post('/extract', (0, validateRequest_1.validateRequest)(TaskDTOs_1.ExtractTasksDTOSchema), task_controller_1.extractTasksFromMinute);
 exports.default = router;

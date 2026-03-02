@@ -16,6 +16,7 @@ const errorHandler = (err, req, res, next) => {
     return res.status(500).json({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'An unexpected error occurred.',
+        errorDetails: err.message,
         timestamp: new Date().toISOString()
     });
 };
